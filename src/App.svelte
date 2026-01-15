@@ -5,6 +5,8 @@
   import RateConfigComponent from './lib/components/RateConfig.svelte';
   import BatteryConfigComponent from './lib/components/BatteryConfig.svelte';
   import ResultsDashboard from './lib/components/ResultsDashboard.svelte';
+  import SavingsChart from './lib/components/charts/SavingsChart.svelte';
+  import DailyFlowChart from './lib/components/charts/DailyFlowChart.svelte';
 
   let intervals: EnergyInterval[] = [];
 
@@ -72,6 +74,8 @@
 
     {#if result}
       <ResultsDashboard {result} />
+      <SavingsChart {result} purchasePrice={batteryConfig.purchasePrice} />
+      <DailyFlowChart {result} />
     {/if}
   {/if}
 </main>
