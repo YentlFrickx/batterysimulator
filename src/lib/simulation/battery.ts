@@ -1,22 +1,15 @@
 import type {
   EnergyInterval,
   BatteryConfig,
-  RateConfig,
+  RateSchedule,
   SimulationResult,
   DailyResult,
-  RateTier,
 } from '../types';
 import { classifyRate } from './classifier';
 
-function getRate(tier: RateTier, config: RateConfig): number {
-  switch (tier) {
-    case 'peak':
-      return config.peakRate;
-    case 'dal':
-      return config.dalRate;
-    case 'superDal':
-      return config.superDalRate;
-  }
+function getRate(tierId: string, schedule: RateSchedule): number {
+  const tier = schedule.tiers.find(t => t.id === tierId);
+  return tier?.rate ?? 0;
 }
 
 function formatDateKey(date: Date): string {
@@ -26,7 +19,7 @@ function formatDateKey(date: Date): string {
 export function simulateBattery(
   intervals: EnergyInterval[],
   batteryConfig: BatteryConfig,
-  rateConfig: RateConfig
+  rateSchedule: RateSchedule
 ): SimulationResult {
   const usableCapacity =
     batteryConfig.capacityKwh * (batteryConfig.usableCapacityPercent / 100);
@@ -45,8 +38,8 @@ export function simulateBattery(
 
   for (const interval of intervals) {
     const dateKey = formatDateKey(interval.startTime);
-    const tier = classifyRate(interval.startTime);
-    const rate = getRate(tier, rateConfig);
+    const tierId = classifyRate(interval.startTime, rateSchedule);
+    const rate = getRate(tierId, rateSchedule);
 
     if (!dailyMap.has(dateKey)) {
       dailyMap.set(dateKey, {
@@ -70,7 +63,7 @@ export function simulateBattery(
 
     // Cost without battery: pay for consumption, receive for injection
     const costWithout =
-      interval.consumptionKwh * rate - interval.injectionKwh * rateConfig.injectionRate;
+      interval.consumptionKwh * rate - interval.injectionKwh * rateSchedule.injectionRate;
     totalCostWithout += costWithout;
     daily.costWithoutBattery += costWithout;
 
@@ -88,7 +81,7 @@ export function simulateBattery(
 
       // Remaining injection goes to grid
       const remainingInjection = interval.injectionKwh - canStore;
-      costWith -= remainingInjection * rateConfig.injectionRate;
+      costWith -= remainingInjection * rateSchedule.injectionRate;
     }
 
     // Then: use battery for consumption

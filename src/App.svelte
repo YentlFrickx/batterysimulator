@@ -1,5 +1,6 @@
 <script lang="ts">
-  import type { EnergyInterval, RateConfig, BatteryConfig, SimulationResult } from './lib/types';
+  import type { EnergyInterval, RateSchedule, BatteryConfig, SimulationResult } from './lib/types';
+  import { DEFAULT_RATE_SCHEDULE } from './lib/types';
   import { simulateBattery } from './lib/simulation/battery';
   import CsvUploader from './lib/components/CsvUploader.svelte';
   import RateConfigComponent from './lib/components/RateConfig.svelte';
@@ -10,12 +11,7 @@
 
   let intervals: EnergyInterval[] = [];
 
-  let rateConfig: RateConfig = {
-    peakRate: 0.35,
-    dalRate: 0.28,
-    superDalRate: 0.19,
-    injectionRate: 0.05,
-  };
+  let rateSchedule: RateSchedule = structuredClone(DEFAULT_RATE_SCHEDULE);
 
   let batteryConfig: BatteryConfig = {
     capacityKwh: 10,
@@ -37,12 +33,12 @@
       result = null;
       return;
     }
-    result = simulateBattery(intervals, batteryConfig, rateConfig);
+    result = simulateBattery(intervals, batteryConfig, rateSchedule);
   }
 
   // Re-run simulation when configs change
   $: if (intervals.length > 0) {
-    result = simulateBattery(intervals, batteryConfig, rateConfig);
+    result = simulateBattery(intervals, batteryConfig, rateSchedule);
   }
 </script>
 
@@ -64,7 +60,7 @@
   {#if intervals.length > 0}
     <div class="config-grid">
       <section>
-        <RateConfigComponent bind:config={rateConfig} />
+        <RateConfigComponent bind:schedule={rateSchedule} />
       </section>
 
       <section>

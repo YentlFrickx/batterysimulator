@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { simulateBattery } from './battery';
-import type { EnergyInterval, BatteryConfig, RateConfig } from '../types';
+import type { EnergyInterval, BatteryConfig, RateSchedule } from '../types';
+import { DEFAULT_RATE_SCHEDULE } from '../types';
 
 const defaultBatteryConfig: BatteryConfig = {
   capacityKwh: 10,
@@ -10,12 +11,7 @@ const defaultBatteryConfig: BatteryConfig = {
   lifespanYears: 15,
 };
 
-const defaultRateConfig: RateConfig = {
-  peakRate: 0.35,
-  dalRate: 0.28,
-  superDalRate: 0.19,
-  injectionRate: 0.05,
-};
+const defaultRateSchedule: RateSchedule = DEFAULT_RATE_SCHEDULE;
 
 describe('simulateBattery', () => {
   it('charges battery from excess solar injection', () => {
@@ -28,7 +24,7 @@ describe('simulateBattery', () => {
       },
     ];
 
-    const result = simulateBattery(intervals, defaultBatteryConfig, defaultRateConfig);
+    const result = simulateBattery(intervals, defaultBatteryConfig, defaultRateSchedule);
     expect(result.dailyResults[0].batteryChargedKwh).toBe(2);
   });
 
@@ -48,7 +44,7 @@ describe('simulateBattery', () => {
       },
     ];
 
-    const result = simulateBattery(intervals, defaultBatteryConfig, defaultRateConfig);
+    const result = simulateBattery(intervals, defaultBatteryConfig, defaultRateSchedule);
     expect(result.dailyResults[0].batteryDischargedKwh).toBe(3);
   });
 
@@ -63,7 +59,7 @@ describe('simulateBattery', () => {
     ];
 
     const config = { ...defaultBatteryConfig, capacityKwh: 10 };
-    const result = simulateBattery(intervals, config, defaultRateConfig);
+    const result = simulateBattery(intervals, config, defaultRateSchedule);
     expect(result.dailyResults[0].batteryChargedKwh).toBe(10);
   });
 
@@ -87,7 +83,7 @@ describe('simulateBattery', () => {
       },
     ];
 
-    const result = simulateBattery(intervals, defaultBatteryConfig, defaultRateConfig);
+    const result = simulateBattery(intervals, defaultBatteryConfig, defaultRateSchedule);
 
     // Without battery: pay €1.75 for consumption, receive €0.25 for injection = net €1.50
     // With battery: pay €0 (use stored), receive €0 (stored instead) = net €0
@@ -117,7 +113,7 @@ describe('simulateBattery', () => {
     }
 
     const config = { ...defaultBatteryConfig, purchasePrice: 3000 };
-    const result = simulateBattery(intervals, config, defaultRateConfig);
+    const result = simulateBattery(intervals, config, defaultRateSchedule);
 
     // Should have positive savings and finite payback
     expect(result.annualSavings).toBeGreaterThan(0);
